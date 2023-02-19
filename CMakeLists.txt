@@ -27,8 +27,8 @@ add_executable(${PROGRAM_NAME} ${SRC_DIR}/main.cpp)
 include(FetchContent)
 FetchContent_Declare(
   claujson
-  GIT_REPOSITORY "https://github.com/fmtlib/fmt"
-  GIT_TAG "9.1.0"
+  GIT_REPOSITORY "https://github.com/vztpv/scj3"
+  GIT_TAG "0.11.4"
   )
 FetchContent_MakeAvailable(claujson)
 
