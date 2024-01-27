@@ -1,22 +1,20 @@
 
 // now, test only haswell..
-// need C++17, 64bit..
+// need C++14, 64bit..
 
 
 #include "mimalloc-new-delete.h"
 
-
 #include <iostream>
 #include <string>
 #include <ctime>
-#include <chrono>
 
-#include "claujson.h" // using simdjson 2.2.2
+#include "claujson.h" // using simdjson 3.1.1
+
+#include "_simdjson.h"
 
 #include <cstring>
 
-
-using namespace std::literals::string_view_literals;
 // using namespace std::literals::u8string_view_literals; // ?? 
 
 void utf_8_test() {
@@ -24,7 +22,7 @@ void utf_8_test() {
 
 	// C++17 - stringview, C++20~ - u8string_view
 	Value x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
-	if (x) {
+	if (x) { // if before string is not valid utf-8, then x is not valid. x -> false
 		auto& y = x.str_val();
 		std::cout << y << "\n";
 	}
@@ -42,7 +40,7 @@ void key_dup_test() {
 	x->add_object_element(Value("567"sv), Value(345));
 	x->add_object_element(Value("456"sv), Value(456));
 
-	size_t idx = 0;
+	uint64_t idx = 0;
 	bool found = false;
 
 	found = x->chk_key_dup(&idx);
@@ -53,7 +51,7 @@ void key_dup_test() {
 void json_pointer_test() {
 	//	For example, given the JSON document
 
-	std::string test = u8R"({
+	auto test = u8R"({
 		   "foo": ["bar", "baz"] ,
 		   "" : 0,
 		   "a/b" : 1,
@@ -64,9 +62,9 @@ void json_pointer_test() {
 		   "k\"l" : 6,
 		   " " : 7,
 		   "m~n" : 8
-		})";
+		})"sv;
 
-	std::string test2 = u8R"({
+	auto test2 = u8R"({
 		   "foo": ["bar2", "baz"] ,
 		   "" : 0,
 		  
@@ -78,7 +76,7 @@ void json_pointer_test() {
 		   " " : 7,
 		   "m~n" : 8,
 		   "zzz": 9
-		})";
+		})"sv;
 
 	//	The following JSON strings evaluate to the accompanying values :
 
@@ -191,11 +189,108 @@ void json_pointer_test() {
 	}
 }
 
+void str_test() {
+	auto x = u8"한글 Test";
+
+	claujson::Value A(x);
+
+	if (!A.is_str()) {
+		std::cout << "ERROR ";
+	}
+
+	auto y = "test";
+
+	claujson::Value B(y);
+
+	if (!B.is_str()) {
+		std::cout << "ERROR2 ";
+	}
+
+	std::string z = "test";
+	claujson::Value C(z);
+
+	if (!C.is_str()) {
+		std::cout << "ERROR3 ";
+	}
+	
+}
+
+// iterator test.
+#include <functional>
+namespace claujson {
+	class JsonIterator {
+	public:
+		JsonIterator& enter(std::function<void(Structured*)> func = { }) {
+			if (_m_now && _m_now->get_value_list(_m_child_pos_in_parent.back()).is_structured()) {
+				_m_now = _m_now->get_value_list(_m_child_pos_in_parent.back()).as_structured_ptr();
+				_m_child_pos_in_parent.push_back(0);
+				if (func) {
+					func(_m_now);
+				}
+			}
+			return *this;
+		}
+		
+		JsonIterator& quit(std::function<void(Structured*)> func = { }) {
+			if (_m_now) {
+				_m_child_pos_in_parent.pop_back();
+				_m_now = _m_now->get_parent();
+				if (func) {
+					func(_m_now);
+				}
+			}
+			return *this;
+		}
+
+		JsonIterator& next(std::function<void(Structured*)> func = { }) {
+			if (_m_now) {
+				_m_child_pos_in_parent.back()++;
+				if (func) {
+					func(_m_now);
+				}
+			}
+			return *this;
+		}
+
+		JsonIterator& iterate(std::function<void(Value&)> func) {
+			if (_m_now) {
+				size_t len = _m_now->get_data_size();
+				for (size_t i = _m_child_pos_in_parent.back(); i < len; ++i) {
+					func(_m_now->get_value_list(i));
+				}
+			}
+			return *this;
+		}
+
+		bool is_valid() const {
+			return _m_now && _m_child_pos_in_parent.empty() == false && _m_child_pos_in_parent.back() < _m_now->get_data_size();
+		}
+
+		Value& now() {
+			if (_m_now) {
+				return _m_now->get_value_list(_m_child_pos_in_parent.back());
+			}
+			static Value null_data(nullptr, false);
+			return null_data;
+		}
+
+	public:
+		JsonIterator(Structured* arr_or_obj) : _m_now(arr_or_obj) {
+			_m_child_pos_in_parent.push_back(0);
+		}
+	private:
+		Structured* _m_now = nullptr;
+		std::vector<size_t> _m_child_pos_in_parent;
+	};
+}
 
 int main(int argc, char* argv[])
 {
+	std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
+		<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
+
 	if (argc <= 1) {
-		std::cout << "[program name] [json file name] \n";
+		std::cout << "[program name] [json file name] (thr_num) \n";
 		return 2;
 	}
 
@@ -206,7 +301,7 @@ int main(int argc, char* argv[])
 	{
 		auto str = R"()"sv;
 
-		claujson::init();
+		claujson::init(0);
 
 		claujson::Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
@@ -215,7 +310,7 @@ int main(int argc, char* argv[])
 	{
 		auto str = R"("A" : 3 )"sv;
 
-		claujson::init();
+		claujson::init(0);
 
 		claujson::Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
@@ -224,7 +319,7 @@ int main(int argc, char* argv[])
 	{
 		auto str = R"(3,  3)"sv;
 
-		claujson::init();
+		claujson::init(0);
 
 		claujson::Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
@@ -246,8 +341,20 @@ int main(int argc, char* argv[])
 
 	//try 
 	{
-		claujson::init(0);
-		claujson::log.console();
+		claujson::init(8);
+
+		if (argc < 4) {
+			claujson::log.console();
+			claujson::log.info();
+			claujson::log.warn();
+		}
+
+		//claujson::log.no_print();
+		//claujson::log.console();
+		//claujson::log.info();
+		//claujson::log.warn();
+		//claujson::log.info(true);
+		//claujson::log.warn(true);
 
 		//utf_8_test();
 
@@ -255,6 +362,7 @@ int main(int argc, char* argv[])
 
 		//json_pointer_test();
 
+		//str_test();
 
 		for (int i = 0; i < 3; ++i) {
 			claujson::Value j;
@@ -264,8 +372,14 @@ int main(int argc, char* argv[])
 
 				auto a = std::chrono::steady_clock::now();
 
+				int thr_num = 0;
+
+				if (argc > 2) {
+					thr_num = std::atoi(argv[2]);
+				}
+
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, 0, true); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, thr_num); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";
@@ -275,25 +389,71 @@ int main(int argc, char* argv[])
 					return 1;
 				}
 
+
 				auto b = std::chrono::steady_clock::now();
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
 
-				//claujson::save("test12.txt", j);
-				claujson::save_parallel("test34.json", j, 0);
-				std::cout << "save_parallel" <<
-					std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
+				{
+					a = std::chrono::steady_clock::now();
 
+					_simdjson::dom::parser test;
+					
+					auto x = test.load(argv[1]);
+					
+					b = std::chrono::steady_clock::now();
+					dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+					std::cout << "simdjson " << dur.count() << "ms\n";
+				}
+
+				//claujson::clean(j);
+
+				//return 0;
+				//
+				// 
+				
+				claujson::save_parallel("temp.json", j, thr_num, true);
+				
+				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
+
+				if (1) {
+
+					claujson::Value x;
+					auto result = claujson::parse("temp.json", x, thr_num);
+
+					if (!result.first) {
+						return 1;
+					}
+
+					auto _diff = claujson::diff(j, x);
+
+					if (_diff.is_valid() && _diff.as_structured_ptr() && _diff.as_array()->empty() == false) {
+						claujson::clean(x);
+						claujson::clean(_diff);
+						return 1;
+					}
+
+					claujson::clean(x);
+					claujson::clean(_diff);
+				}
 				claujson::clean(j);
-
 				return 0;
+				//b = std::chrono::steady_clock::now();
+				//test::save("test78.json", j);
+
+			//	std::cout << "save " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
+
+
+				//claujson::clean(j);
+
+				//return 0;
 
 				//claujson::LoadData::save(std::cout, ut);
 				//claujson::LoadData::save("output14.json", j);
-
+//
 				auto c = std::chrono::steady_clock::now();
-				dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
-				std::cout << "write " << dur.count() << "ms\n";
+				//dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
+				//std::cout << "write " << dur.count() << "ms\n";
 
 				int counter = 0;
 				ok = x.first;
@@ -302,26 +462,35 @@ int main(int argc, char* argv[])
 
 				// json_pointer, json_pointerA <- u8string_view?
 
-				if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
+				if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec, false)) {
 					std::cout << "json pointer error.\n";
 					return 1;
 				}
 
 				double sum = 0;
 				if (true && ok) {
-					int chk = 0;
 					for (int i = 0; i < 1; ++i) {
 						if (j.is_structured()) {
-							auto& features = j.as_object()[1]; // j[1];
-							for (auto& feature : features.as_array()) {
-								auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
-								for (auto& coordinate_ : coordinate.as_array()) {
-									for (auto& x : coordinate_.as_array()) {
+							auto& features = j[1];
+							claujson::Array* features_arr = features.as_array(); // as_array_ptr() ?
+							if (!features_arr) {
+								continue;
+							}
+							for (auto& feature : *features_arr) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
+								auto& coordinate = feature["geometry"sv]["coordinates"sv][0];  // feature.json_pointerB(vec)[0];  
+								claujson::Array* coordinate_arr = coordinate.as_array();
+								if (!coordinate_arr) {
+									continue;
+								}
+								for (auto& coordinate_ : *coordinate_arr) {
+									claujson::Array* coordinate__arr = coordinate_.as_array();
+									if (!coordinate__arr) {
+										continue;
+									}
+									for (auto& x : *coordinate__arr) {
 										if (x.is_float()) {
 											sum += x.float_val();
-
 											counter++;
-											chk++;
 										}
 									}
 								}
@@ -335,7 +504,52 @@ int main(int argc, char* argv[])
 				std::cout << dur.count() << "ms\n";
 				std::cout << sum << " ";
 				std::cout << counter << "  ";
-				//return 0;
+				
+				c = std::chrono::steady_clock::now();
+				claujson::clean(j);
+				d = std::chrono::steady_clock::now();
+				dur = std::chrono::duration_cast<std::chrono::milliseconds>(d - c);
+				std::cout << "clean " <<  dur.count() << "ms\n";
+
+
+				return 0;
+
+				{
+					double sum = 0;
+					counter = 0;
+					
+					if (true && ok) {
+						int chk = 0;
+						for (int i = 0; i < 1; ++i) {
+							claujson::JsonIterator iter(j[1].as_structured_ptr()); // features
+							while (iter.is_valid()) {
+								auto& x = iter.now()["geometry"sv]["coordinates"sv][0]; // coordinate
+								claujson::JsonIterator iter2(x.as_structured_ptr());
+								iter2.iterate([&](claujson::Value& v) {
+									claujson::JsonIterator iter3(v.as_structured_ptr());
+									iter3.iterate([&](claujson::Value& v) {
+										if (v.is_float()) {
+											sum += v.get_floating();
+											counter++;
+											chk++;
+										}
+										}
+									);
+									}
+								);
+								iter.next();
+							}
+						}
+					}
+
+					auto d = std::chrono::steady_clock::now();
+					dur = std::chrono::duration_cast<std::chrono::milliseconds>(d - c);
+					std::cout << dur.count() << "ms\n";
+					std::cout << sum << " ";
+					std::cout << counter << "  ";
+				}
+				claujson::clean(j);
+				return 0;
 
 				auto c1 = std::chrono::steady_clock::now();
 
@@ -359,14 +573,14 @@ int main(int argc, char* argv[])
 				claujson::Value Y("coordinates"sv); // use claujson::Value.
 
 				sum = 0; counter = 0;
-				if (true && ok) {
+				/*if (true && ok) {
 					int chk = 0;
 					for (int i = 0; i < 1; ++i) {
 						auto& features = j.as_object()[1]; // j[1];
 						for (auto& feature : features.as_array()) {
-							auto& geometry = feature.as_object().at(X.str_val()); // as_array()[t].as_object()["geometry"];
+							auto& geometry = feature.as_object()[X.str_val()]; // as_array()[t].as_object()["geometry"];
 							if (geometry.is_structured()) { // is_obj or arr?  -> is_structured
-								auto& coordinates = geometry.as_object().at(Y.str_val()); // todo - add? at(const Data& data) ?
+								auto& coordinates = geometry.as_object()[Y.str_val()]; // todo - add? at(const Data& data) ?
 								auto& coordinate = coordinates.as_array()[0];
 								for (auto& coordinate_ : coordinate.as_array()) {
 									for (auto& x : coordinate_.as_array()) {
@@ -385,7 +599,7 @@ int main(int argc, char* argv[])
 							}
 						}
 					}
-				}
+				}*/
 
 				auto c3 = std::chrono::steady_clock::now();
 				dur = std::chrono::duration_cast<std::chrono::milliseconds>(c3 - c2);
