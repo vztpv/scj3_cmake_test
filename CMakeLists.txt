@@ -33,6 +33,7 @@ FetchContent_Declare(
 if(NOT claujson_POPULATED)
 	FetchContent_MakeAvailable(claujson)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
+ 	add_subdirectory(${claujson_SOURCE_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 include(FetchContent)
@@ -44,6 +45,7 @@ FetchContent_Declare(
 if(NOT Mimalloc_POPULATED)
 	FetchContent_MakeAvailable(Mimalloc)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
+ 	add_subdirectory(${mimalloc_SOURCE_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 # header..
