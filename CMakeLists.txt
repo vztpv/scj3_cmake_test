@@ -31,7 +31,7 @@ FetchContent_Declare(
   GIT_TAG "main"
   )
 FetchContent_GetProperties(claujson)
-add_subdirectory(${claujson_SOURCE_DIR} EXCLUDE_FROM_ALL)
+add_subdirectory(${claujson_SOURCE_DIR})
 
 include(FetchContent)
 FetchContent_Declare(
@@ -40,7 +40,7 @@ FetchContent_Declare(
   GIT_TAG "v2.0.9"
   )
 FetchContent_GetProperties(Mimalloc)
-add_subdirectory(${mimalloc_SOURCE_DIR} EXCLUDE_FROM_ALL)
+add_subdirectory(${mimalloc_SOURCE_DIR})
 
 # header..
 target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${mimalloc_SOURCE_DIR}/include ${claujson_SOURCE_DIR})
