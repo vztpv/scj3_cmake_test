@@ -24,25 +24,28 @@ set(INCLUDE_DIR ${ROOT})
 # build setting.
 add_executable(${PROGRAM_NAME} ${SRC_DIR}/main.cpp)
 
-include(FetchContent)
-FetchContent_Declare(
-  claujson
-  GIT_REPOSITORY "https://github.com/vztpv/scj3"
-  GIT_TAG "main"
-  )
-FetchContent_MakeAvailable(claujson)
 if(NOT claujson_POPULATED)
+	include(FetchContent)
+	FetchContent_Declare(
+	  claujson
+	  GIT_REPOSITORY "https://github.com/vztpv/scj3"
+	  GIT_TAG "main"
+	  )
+	FetchContent_MakeAvailable(claujson)
+
 	FetchContent_Populate(claujson)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
 endif()
-include(FetchContent)
-FetchContent_Declare(
-  Mimalloc
-  GIT_REPOSITORY "https://github.com/microsoft/mimalloc"
-  GIT_TAG "v2.0.9"
-  )
-FetchContent_MakeAvailable(Mimalloc)
+
 if(NOT Mimalloc_POPULATED)
+	include(FetchContent)
+	FetchContent_Declare(
+	  Mimalloc
+	  GIT_REPOSITORY "https://github.com/microsoft/mimalloc"
+	  GIT_TAG "v2.0.9"
+	  )
+	FetchContent_MakeAvailable(Mimalloc)
+
 	FetchContent_Populate(Mimalloc)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
 endif()
