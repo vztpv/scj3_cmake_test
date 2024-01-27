@@ -32,8 +32,6 @@ if(NOT claujson_POPULATED)
 	  GIT_TAG "main"
 	  )
 	FetchContent_MakeAvailable(claujson)
-
-	FetchContent_Populate(claujson)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
 endif()
 
@@ -45,8 +43,6 @@ if(NOT Mimalloc_POPULATED)
 	  GIT_TAG "v2.0.9"
 	  )
 	FetchContent_MakeAvailable(Mimalloc)
-
-	FetchContent_Populate(Mimalloc)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
 endif()
 
