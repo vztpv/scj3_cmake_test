@@ -52,7 +52,7 @@ endif()
 
 
 # header..
-target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${mimalloc_SOURCE_DIR}/include ${claujson_SOURCE_DIR})
+target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${mimalloc_INCLUDE_DIR} ${claujson_INCLUDE_DIR})
 
 if (UNIX) 
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17  -march=native -pthread  -Wno-narrowing  -O2)
