@@ -47,7 +47,7 @@ FetchContent_GetProperties(Mimalloc)
 if(NOT Mimalloc_POPULATED)
 	FetchContent_Populate(Mimalloc)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-	add_subdirectory(${Mimalloc_SOURCE_DIR})
+	add_subdirectory(${mimalloc_SOURCE_DIR})
 endif()
 
 
