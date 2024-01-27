@@ -41,7 +41,7 @@ FetchContent_Declare(
 FetchContent_GetProperties(Mimalloc)
 
 # header..
-target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${mimalloc_SOURCE}/include)
+target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${Mimalloc_SOURCE}/include)
 
 if (UNIX) 
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17  -march=native -pthread  -Wno-narrowing  -O2)
