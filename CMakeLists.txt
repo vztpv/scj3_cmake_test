@@ -17,12 +17,12 @@ set(ROOT .)
 
 set(LIB_DIR ${ROOT})
 
-set(SRC_DIR ${ROOT})
+set(SOURCE_DIR ${ROOT})
 
 set(INCLUDE_DIR ${ROOT})
 
 # build setting.
-add_executable(${PROGRAM_NAME} ${SRC_DIR}/main.cpp)
+add_executable(${PROGRAM_NAME} ${SOURCE_DIR}/main.cpp)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -31,7 +31,11 @@ FetchContent_Declare(
   GIT_TAG "main"
   )
 FetchContent_GetProperties(claujson)
-add_subdirectory(${claujson_SOURCE_DIR})
+if(NOT claujson_POPULATED)
+	FetchContent_Populate(claujson)
+	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
+	add_subdirectory(${claujson_SOURCE_DIR} EXCLUDE_FROM_ALL)
+endif()
 
 include(FetchContent)
 FetchContent_Declare(
@@ -40,7 +44,12 @@ FetchContent_Declare(
   GIT_TAG "v2.0.9"
   )
 FetchContent_GetProperties(Mimalloc)
-add_subdirectory(${mimalloc_SOURCE_DIR})
+if(NOT Mimalloc_POPULATED)
+	FetchContent_Populate(Mimalloc)
+	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
+	add_subdirectory(${Mimalloc_SOURCE_DIR} EXCLUDE_FROM_ALL)
+endif()
+
 
 # header..
 target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${mimalloc_SOURCE_DIR}/include ${claujson_SOURCE_DIR})
