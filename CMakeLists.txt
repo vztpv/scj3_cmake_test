@@ -31,11 +31,6 @@ FetchContent_Declare(
   GIT_TAG "main"
   )
 FetchContent_GetProperties(claujson)
-if(NOT claujson_POPULATED)
-	FetchContent_MakeAvailable(claujson)
-	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
- 	add_subdirectory(${claujson_SOURCE_DIR} EXCLUDE_FROM_ALL)
-endif()
 
 include(FetchContent)
 FetchContent_Declare(
@@ -44,11 +39,6 @@ FetchContent_Declare(
   GIT_TAG "v2.0.9"
   )
 FetchContent_GetProperties(Mimalloc)
-if(NOT Mimalloc_POPULATED)
-	FetchContent_MakeAvailable(Mimalloc)
-	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
- 	add_subdirectory(${mimalloc_SOURCE_DIR} EXCLUDE_FROM_ALL)
-endif()
 
 # header..
 target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR})
