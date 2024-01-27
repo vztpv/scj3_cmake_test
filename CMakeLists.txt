@@ -30,6 +30,7 @@ FetchContent_Declare(
   GIT_REPOSITORY "https://github.com/vztpv/scj3"
   GIT_TAG "main"
   )
+FetchContent_GetProperties(claujson)
 if(NOT claujson_POPULATED)
 	FetchContent_MakeAvailable(claujson)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
@@ -42,6 +43,7 @@ FetchContent_Declare(
   GIT_REPOSITORY "https://github.com/microsoft/mimalloc"
   GIT_TAG "v2.0.9"
   )
+FetchContent_GetProperties(Mimalloc)
 if(NOT Mimalloc_POPULATED)
 	FetchContent_MakeAvailable(Mimalloc)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
