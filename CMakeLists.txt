@@ -24,24 +24,24 @@ set(INCLUDE_DIR ${ROOT})
 # build setting.
 add_executable(${PROGRAM_NAME} ${SRC_DIR}/main.cpp)
 
+include(FetchContent)
+FetchContent_Declare(
+  claujson
+  GIT_REPOSITORY "https://github.com/vztpv/scj3"
+  GIT_TAG "main"
+  )
 if(NOT claujson_POPULATED)
-	include(FetchContent)
-	FetchContent_Declare(
-	  claujson
-	  GIT_REPOSITORY "https://github.com/vztpv/scj3"
-	  GIT_TAG "main"
-	  )
 	FetchContent_MakeAvailable(claujson)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
 endif()
 
+include(FetchContent)
+FetchContent_Declare(
+  Mimalloc
+  GIT_REPOSITORY "https://github.com/microsoft/mimalloc"
+  GIT_TAG "v2.0.9"
+  )
 if(NOT Mimalloc_POPULATED)
-	include(FetchContent)
-	FetchContent_Declare(
-	  Mimalloc
-	  GIT_REPOSITORY "https://github.com/microsoft/mimalloc"
-	  GIT_TAG "v2.0.9"
-	  )
 	FetchContent_MakeAvailable(Mimalloc)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
 endif()
@@ -50,7 +50,7 @@ endif()
 target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR})
 
 if (UNIX) 
-	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -march=native -pthread  -Wno-narrowing  -O2)
+	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17  -march=native -pthread  -Wno-narrowing  -O2)
 elseif (MSVC)
 	target_compile_definitions(${PROGRAM_NAME} PRIVATE
         "$<$<CONFIG:Release>:"
