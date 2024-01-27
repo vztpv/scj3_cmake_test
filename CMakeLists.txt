@@ -34,7 +34,6 @@ FetchContent_MakeAvailable(claujson)
 if(NOT claujson_POPULATED)
 	FetchContent_Populate(claujson)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-	add_subdirectory(${claujson_SOURCE_DIR} ${claujson_LIB_DIR} EXCLUDE_FROM_ALL)
 endif()
 include(FetchContent)
 FetchContent_Declare(
