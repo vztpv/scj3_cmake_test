@@ -66,18 +66,9 @@ elseif (MSVC)
             /permissive-;
             /sdl;
             /W3;
+	    /Zc:__cplusplus;
             ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
             ${DEFAULT_CXX_EXCEPTION_HANDLING}
-        )
-    endif()
-    if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
-        target_link_options(${PROGRAM_NAME} PRIVATE
-            $<$<CONFIG:Release>:
-                /OPT:REF;
-                /OPT:ICF
-            >
-            /DEBUG;
-            /SUBSYSTEM:CONSOLE
         )
     endif()
 endif()
