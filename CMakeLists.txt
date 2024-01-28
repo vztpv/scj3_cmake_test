@@ -30,12 +30,7 @@ FetchContent_Declare(
   GIT_REPOSITORY "https://github.com/vztpv/scj3"
   GIT_TAG "0.18.1"
   )
-FetchContent_GetProperties(claujson)
-if(NOT claujson_POPULATED)
-	FetchContent_Populate(claujson)
-	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-	add_subdirectory(${claujson_SOURCE_DIR})
-endif()
+FetchContent_MakeAvailable(claujson)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -43,16 +38,11 @@ FetchContent_Declare(
   GIT_REPOSITORY "https://github.com/microsoft/mimalloc"
   GIT_TAG "v2.0.9"
   )
-FetchContent_GetProperties(Mimalloc)
-if(NOT Mimalloc_POPULATED)
-	FetchContent_Populate(Mimalloc)
-	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-	add_subdirectory(${mimalloc_SOURCE_DIR})
-endif()
+FetchContent_MakeAvailable(Mimalloc)
 
 
 # header..
-target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${mimalloc_SOURCE_DIR}/include ${claujson_SOURCE_DIR})
+target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR})
 
 if (UNIX) 
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17  -march=native -pthread  -Wno-narrowing  -O2)
