@@ -28,7 +28,7 @@ include(FetchContent)
 FetchContent_Declare(
   claujson
   GIT_REPOSITORY "https://github.com/vztpv/scj3"
-  GIT_TAG "main"
+  GIT_TAG "0.19.0"
   )
 FetchContent_MakeAvailable(claujson)
 
