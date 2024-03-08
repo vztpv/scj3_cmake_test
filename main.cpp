@@ -462,7 +462,7 @@ int main(int argc, char* argv[])
 
 				// json_pointer, json_pointerA <- u8string_view?
 
-				if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec, false)) {
+				if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
 					std::cout << "json pointer error.\n";
 					return 1;
 				}
