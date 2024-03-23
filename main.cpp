@@ -341,7 +341,7 @@ int main(int argc, char* argv[])
 
 	//try 
 	{
-		claujson::init(8);
+		claujson::init(0);
 
 		if (argc < 4) {
 			claujson::log.console();
