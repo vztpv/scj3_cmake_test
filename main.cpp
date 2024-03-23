@@ -1,7 +1,7 @@
 
 // now, test only haswell..
-// need C++14, 64bit..
-
+// need C++14~, 64bit..
+// mainly tested with C++17...
 
 #include "mimalloc-new-delete.h"
 
@@ -9,7 +9,7 @@
 #include <string>
 #include <ctime>
 
-#include "claujson.h" // using simdjson 3.1.1
+#include "claujson.h" // using simdjson 3.3.0
 
 #include "_simdjson.h"
 
@@ -24,7 +24,7 @@ void utf_8_test() {
 	Value x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
 	if (x) { // if before string is not valid utf-8, then x is not valid. x -> false
 		auto& y = x.str_val();
-		std::cout << y << "\n";
+		std::cout << y.data() << "\n";
 	}
 }
 
@@ -286,8 +286,9 @@ namespace claujson {
 
 int main(int argc, char* argv[])
 {
-	std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
-		<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
+	std::cout << sizeof(std::vector<std::pair<claujson::Value, claujson::Value>>) << "\n";
+	//std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
+	//	<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
 
 	if (argc <= 1) {
 		std::cout << "[program name] [json file name] (thr_num) \n";
@@ -341,14 +342,15 @@ int main(int argc, char* argv[])
 
 	//try 
 	{
-		claujson::init(0);
+		claujson::init(22);
 
 		if (argc < 4) {
 			claujson::log.console();
-			claujson::log.info();
-			claujson::log.warn();
+			claujson::log.info(); // info도 보임
+			claujson::log.warn(); // warn도 보임
 		}
 
+		// log test.
 		//claujson::log.no_print();
 		//claujson::log.console();
 		//claujson::log.info();
@@ -368,7 +370,19 @@ int main(int argc, char* argv[])
 			claujson::Value j;
 			bool ok;
 			//try
-			{
+			{	
+				if(1){
+					auto a = std::chrono::steady_clock::now();
+
+					_simdjson::dom::parser test;
+					
+					auto x = test.load(argv[1]);
+					
+					auto b = std::chrono::steady_clock::now();
+					auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+					std::cout << "simdjson " << dur.count() << "ms\n";
+				}
+
 
 				auto a = std::chrono::steady_clock::now();
 
@@ -394,18 +408,9 @@ int main(int argc, char* argv[])
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
 
-				{
-					a = std::chrono::steady_clock::now();
-
-					_simdjson::dom::parser test;
-					
-					auto x = test.load(argv[1]);
-					
-					b = std::chrono::steady_clock::now();
-					dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
-					std::cout << "simdjson " << dur.count() << "ms\n";
-				}
-
+			
+				//debug test
+				//std::cout << j << "\n";
 				//claujson::clean(j);
 
 				//return 0;
@@ -415,7 +420,7 @@ int main(int argc, char* argv[])
 				claujson::save_parallel("temp.json", j, thr_num, true);
 				
 				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
-
+				
 				if (1) {
 
 					claujson::Value x;
@@ -436,8 +441,9 @@ int main(int argc, char* argv[])
 					claujson::clean(x);
 					claujson::clean(_diff);
 				}
-				claujson::clean(j);
-				return 0;
+
+				//claujson::clean(j);
+				//return 0;
 				//b = std::chrono::steady_clock::now();
 				//test::save("test78.json", j);
 
@@ -467,6 +473,9 @@ int main(int argc, char* argv[])
 					return 1;
 				}
 
+				static const auto& _geometry = claujson::Value("geometry"sv);
+				static const auto& _coordinates = claujson::Value("coordinates"sv);
+
 				double sum = 0;
 				if (true && ok) {
 					for (int i = 0; i < 1; ++i) {
@@ -477,7 +486,7 @@ int main(int argc, char* argv[])
 								continue;
 							}
 							for (auto& feature : *features_arr) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
-								auto& coordinate = feature["geometry"sv]["coordinates"sv][0];  // feature.json_pointerB(vec)[0];  
+								auto& coordinate = feature[_geometry][_coordinates][0];  // feature.json_pointerB(vec)[0];  
 								claujson::Array* coordinate_arr = coordinate.as_array();
 								if (!coordinate_arr) {
 									continue;
