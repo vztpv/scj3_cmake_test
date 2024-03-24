@@ -66,7 +66,6 @@ elseif (MSVC)
             /permissive-;
             /sdl;
             /W3;
-	    /Zc:__cplusplus;
             ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
             ${DEFAULT_CXX_EXCEPTION_HANDLING}
         )
