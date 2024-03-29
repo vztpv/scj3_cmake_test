@@ -58,12 +58,12 @@ void json_pointer_test() {
 		   "c%d" : 2,
 		   "e^f" : 3,
 		   "g|h" : 4,
-		   "i\\\\j" : 5,
+		   "i\\j" : 5,
 		   "k\"l" : 6,
 		   " " : 7,
 		   "m~n" : 8
 		})"sv;
-
+	std::cout << test << "\n";
 	auto test2 = u8R"({
 		   "foo": ["bar2", "baz"] ,
 		   "" : 0,
@@ -71,7 +71,7 @@ void json_pointer_test() {
 		   "c%d" : 2,
 		   "e^f" : 3,
 		   "g|h" : 45,
-		   "i\\\\j" : 5,
+		   "i\\j" : 5,
 		   "k\"l" : 6,
 		   " " : 7,
 		   "m~n" : 8,
@@ -148,11 +148,11 @@ void json_pointer_test() {
 		std::cout << y << " ";
 	}
 	{
-		Value& y = x.json_pointer(R"(/i\\\\j)"sv); // chk R
+		Value& y = x.json_pointer(u8R"(/i\\j)"sv); // chk R
 		std::cout << y << " ";
 	}
 	{
-		Value& y = x.json_pointer(R"(/k\"l)"sv); // chk R
+		Value& y = x.json_pointer(u8R"(/k\"l)"sv); // chk R
 		std::cout << y << " ";
 	}
 	{
@@ -291,7 +291,7 @@ int main(int argc, char* argv[])
 	//	<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
 
 	if (argc <= 1) {
-		std::cout << "[program name] [json file name] (thr_num) \n";
+		std::cout << "[program name] [json file name] (number of thread) \n";
 		return 2;
 	}
 
@@ -358,25 +358,25 @@ int main(int argc, char* argv[])
 		//claujson::log.info(true);
 		//claujson::log.warn(true);
 
-		//utf_8_test();
+		utf_8_test();
 
-		//key_dup_test();
+		key_dup_test();
 
-		//json_pointer_test();
+		json_pointer_test();
 
-		//str_test();
+		str_test();
 
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < 10; ++i) {
 			claujson::Value j;
 			bool ok;
 			//try
 			{	
-				if(1){
+				if (1) {
 					auto a = std::chrono::steady_clock::now();
-
-					_simdjson::dom::parser test;
 					
-					auto x = test.load(argv[1]);
+						_simdjson::dom::parser test;
+
+						auto x = test.load(argv[1]);
 					
 					auto b = std::chrono::steady_clock::now();
 					auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
@@ -411,8 +411,8 @@ int main(int argc, char* argv[])
 			
 				//debug test
 				//std::cout << j << "\n";
-				//claujson::clean(j);
-
+				///claujson::clean(j);
+				///continue;
 				//return 0;
 				//
 				// 
@@ -464,7 +464,7 @@ int main(int argc, char* argv[])
 				int counter = 0;
 				ok = x.first;
 
-				std::vector<claujson::Value> vec;
+				std::vector<StringView> vec;
 
 				// json_pointer, json_pointerA <- u8string_view?
 
@@ -661,4 +661,17 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
+/* result.
+simdjson 236ms
 
+[INFO] simdjson - stage1 start
+[INFO] 83ms
+[INFO] valid1 0ms
+[INFO] test time 7ms
+[INFO] 7ms
+[INFO] parse1 42ms
+[INFO] test6[INFO] parse2 4ms
+[INFO] chk 0ms
+[INFO] 46ms
+[INFO] 138ms
+total 139ms */
