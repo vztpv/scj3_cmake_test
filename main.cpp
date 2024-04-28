@@ -1,15 +1,14 @@
-
+﻿
 // now, test only haswell..
 // need C++14~, 64bit..
 // mainly tested with C++17...
 
 #include "mimalloc-new-delete.h"
-
 #include <iostream>
 #include <string>
 #include <ctime>
 
-#include "claujson.h" // using simdjson 3.3.0
+#include "claujson.h" // using simdjson 3.9.1
 
 #include "_simdjson.h"
 
@@ -167,7 +166,9 @@ void json_pointer_test() {
 	claujson::Value diff = claujson::diff(x, y);
 	std::cout << diff << "\n";
 
-	claujson::Value result = claujson::patch(x, diff);
+	claujson::Value result = x.clone();
+
+	claujson::patch(result, diff);
 
 	std::cout << result << "\n";
 
@@ -358,13 +359,13 @@ int main(int argc, char* argv[])
 		//claujson::log.info(true);
 		//claujson::log.warn(true);
 
-		utf_8_test();
+	//	utf_8_test();
 
-		key_dup_test();
+	//	key_dup_test();
 
-		json_pointer_test();
+	//	json_pointer_test();
 
-		str_test();
+	//	str_test();
 
 		for (int i = 0; i < 10; ++i) {
 			claujson::Value j;
@@ -374,7 +375,7 @@ int main(int argc, char* argv[])
 				if (1) {
 					auto a = std::chrono::steady_clock::now();
 					
-						_simdjson::dom::parser test;
+					static	_simdjson::dom::parser test;
 
 						auto x = test.load(argv[1]);
 					
@@ -393,7 +394,7 @@ int main(int argc, char* argv[])
 				}
 
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, thr_num); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, 0); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";
