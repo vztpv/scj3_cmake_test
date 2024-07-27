@@ -1,4 +1,4 @@
-
+// with vztpv/scj3, claujson 0.23.1
 // now, test only haswell..
 // need C++14~, 64bit..
 // mainly tested with C++17...
@@ -76,25 +76,25 @@ void str_test() {
 void diff_test() {
 	std::cout << "diff test\n";
 
-	claujson::log.console();
-	claujson::log.warn();
-	claujson::log.info();
 	std::string json1 = "{ \"abc\" : [ 1,2,3] }";
 	std::string json2 = "{ \"abc\" : [ 2,4,5] }";
-
-	claujson::Value x, y;
+	
+	claujson::Document x, y;
 	claujson::parser p;
 	p.parse_str(json1, x, 0);
 	p.parse_str(json2, y, 1);
 
-	auto z = claujson::diff(x, y);
-	std::cout << z << "\n";
 
-	auto& k = claujson::patch(x, z);
-	std::cout << k << "\n";
+	claujson::Document z = claujson::diff(x.Get(), y.Get());
 
-	claujson::clean(x);
-	claujson::clean(y);
+	std::cout << z.Get() << "\n";
+
+	auto& k = claujson::patch(x.Get(), y.Get());
+	std::cout << x.Get() << "\n";
+
+	//claujson::clean(x);
+	//claujson::clean(y);
+	//claujson::clean(z);
 }
 
 // iterator test.
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
 	{
 		//claujson::init(24);
 
-		
+
 
 		// log test.
 		//claujson::log.no_print();
@@ -247,10 +247,24 @@ int main(int argc, char* argv[])
 	//	str_test();
 
 
-		claujson::parser p;
+		{
+			claujson::StringView s{ "abc", 3 };
+			claujson::StringView x{ "abcg", 4 };
+
+			std::cout << s.compare(x) << "\n";
+			std::cout << x.compare(s) << "\n";
+		}
+
+				int thr_num = 0;
+
+	if (argc > 2) {
+					thr_num = std::atoi(argv[2]);
+				}
+
+		claujson::parser p(thr_num);
 
 		for (int i = 0; i < 10; ++i) {
-			claujson::Value j;
+			claujson::Document j;
 			
 			if (argc < 4) {
 				claujson::log.console();
@@ -275,19 +289,15 @@ int main(int argc, char* argv[])
 
 				auto a = std::chrono::steady_clock::now();
 
-				int thr_num = 0;
 
-				if (argc > 2) {
-					thr_num = std::atoi(argv[2]);
-				}
+			
 
 				// not-thread-safe..
-				auto x = p.parse(argv[1], j, 0); // argv[1], j, 64 ??
+				auto x = p.parse(argv[1], j, thr_num); // argv[1], j, 64 ??
+				//claujson::Document d = std::move(j);
 
 				if (!x.first) {
 					std::cout << "fail\n";
-
-					claujson::clean(j);
 
 					return 1;
 				}
@@ -301,51 +311,46 @@ int main(int argc, char* argv[])
 				//debug test
 				//std::cout << j << "\n";
 				///claujson::clean(j);
-				///continue;
+				//continue;
 				//return 0;
 				//
 				// 
 				
 				claujson::writer w;
-				w.save_parallel2("temp.json", j, thr_num, true);
+				w.write_parallel2("temp.json", j.Get(), thr_num, false);
 				
-				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
+				std::cout << "write_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 				
 				if (1) {
 
-					claujson::Value x;
+					claujson::Document x;
 					auto result = p.parse("temp.json", x, thr_num);
 
 					if (!result.first) {
 						return 1;
 					}
 
-					auto _diff = claujson::diff(j, x);
+					claujson::Document _diff = claujson::diff(j.Get(), x.Get());
 
-					if (_diff.is_valid() && _diff.as_structured_ptr() && _diff.as_array()->empty() == false) {
-						claujson::clean(x);
-						claujson::clean(_diff);
+					if (_diff.Get().is_valid() && _diff.Get().as_structured_ptr() && _diff.Get().as_array()->empty() == false) {
 						return 1;
 					}
-
-					claujson::clean(x);
-					claujson::clean(_diff);
 				}
 
 				//claujson::clean(j);
 				//return 0;
 				//b = std::chrono::steady_clock::now();
-				//test::save("test78.json", j);
+				//test::write("test78.json", j);
 
-			//	std::cout << "save " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
+			//	std::cout << "write " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
 
 				//claujson::clean(j);
 
 				//return 0;
 
-				//claujson::LoadData::save(std::cout, ut);
-				//claujson::LoadData::save("output14.json", j);
+				//claujson::LoadData::write(std::cout, ut);
+				//claujson::LoadData::write("output14.json", j);
 //
 				auto c = std::chrono::steady_clock::now();
 				//dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
@@ -364,8 +369,8 @@ int main(int argc, char* argv[])
 				double sum = 0;
 				if (true && ok) {
 					for (int i = 0; i < 1; ++i) {
-						if (j.is_structured()) {
-							auto& features = j[1];
+						if (j.Get().is_structured()) {
+							auto& features = j.Get()[1];
 							claujson::Array* features_arr = features.as_array(); // as_array_ptr() ?
 							if (!features_arr) {
 								continue;
@@ -393,33 +398,33 @@ int main(int argc, char* argv[])
 					}
 				}
 
-				auto d = std::chrono::steady_clock::now();
-				dur = std::chrono::duration_cast<std::chrono::milliseconds>(d - c);
+				auto dd = std::chrono::steady_clock::now();
+				dur = std::chrono::duration_cast<std::chrono::milliseconds>(dd - c);
 				std::cout << dur.count() << "ms\n";
 				std::cout << sum << " ";
 				std::cout << counter << "  ";
 				
 				c = std::chrono::steady_clock::now();
-				claujson::clean(j);
-				d = std::chrono::steady_clock::now();
-				dur = std::chrono::duration_cast<std::chrono::milliseconds>(d - c);
+				//claujson::clean(j);
+				dd = std::chrono::steady_clock::now();
+				dur = std::chrono::duration_cast<std::chrono::milliseconds>(dd - c);
 				std::cout << "clean " <<  dur.count() << "ms\n";
 
 
 				return 0;
 
 				
-				claujson::clean(j);
+			//	claujson::clean(j);
 				return 0;
 
 				auto c1 = std::chrono::steady_clock::now();
 
-				//claujson::save("total_ends.json", j);
+				//claujson::write("total_ends.json", j);
 
 				// not thread-safe.
-				w.save_parallel("total_end.json", j, 0);
+				w.write_parallel("total_end.json", j.Get(), 0);
 
-				//claujson::save("total_ends.json", j);
+				//claujson::write("total_ends.json", j);
 
 				//std::cout << "\ncat \n";
 				//system("cat total_end.json");
@@ -468,7 +473,7 @@ int main(int argc, char* argv[])
 				std::cout << dur.count() << "ms\n";
 				std::cout << "Re.. " << sum << " " << counter << "\n";
 
-				claujson::clean(j);
+			//	claujson::clean(j);
 
 				//std::cout << (claujson::error.has_error() ? ("has error") : ("no error")) << "\n";
 				//std::cout << claujson::error.msg() << "\n";
@@ -489,19 +494,19 @@ int main(int argc, char* argv[])
 
 		{
 			claujson::parser p;
-			claujson::Value j;
+			claujson::Document j;
 			auto x = p.parse("total_end.json", j, 0); // argv[1], j, 64 ??
 			if (!x.first) {
 				std::cout << "fail\n";
 
-				claujson::clean(j);
+				//claujson::clean(j);
 
 				return 1;
 			}
 			claujson::writer w;
-			w.save_parallel("total_end2.json", j, 0);
+			w.write_parallel("total_end2.json", j.Get(), 0);
 
-			claujson::clean(j);
+			//claujson::clean(j);
 		}
 	}
 	//catch (...) {
@@ -513,18 +518,3 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-
-/* result.
-simdjson 236ms
-
-[INFO] simdjson - stage1 start
-[INFO] 83ms
-[INFO] valid1 0ms
-[INFO] test time 7ms
-[INFO] 7ms
-[INFO] parse1 42ms
-[INFO] test6[INFO] parse2 4ms
-[INFO] chk 0ms
-[INFO] 46ms
-[INFO] 138ms
-total 139ms */
