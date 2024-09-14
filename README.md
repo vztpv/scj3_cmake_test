@@ -1,2 +1,2 @@
 # scj3_cmake_test
-with https://github.com/vztpv/scj3
+with https://github.com/vztpv/scj3 
