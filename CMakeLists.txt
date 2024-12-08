@@ -36,7 +36,7 @@ include(FetchContent)
 FetchContent_Declare(
   Mimalloc
   GIT_REPOSITORY "https://github.com/microsoft/mimalloc"
-  GIT_TAG "v2.0.9"
+  GIT_TAG "v2.1.7"
   )
 FetchContent_MakeAvailable(Mimalloc)
 
