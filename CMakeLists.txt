@@ -27,7 +27,7 @@ add_executable(${PROGRAM_NAME} ${SOURCE_DIR}/main.cpp)
 include(FetchContent)
 FetchContent_Declare(
   claujson
-  GIT_REPOSITORY "https://github.com/vztpv/scj3"
+  GIT_REPOSITORY "https://github.com/claujson/claujson"
   GIT_TAG "main"
   )
 FetchContent_MakeAvailable(claujson)
