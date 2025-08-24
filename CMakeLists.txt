@@ -38,6 +38,8 @@ FetchContent_Declare(
   GIT_REPOSITORY "https://github.com/microsoft/mimalloc"
   GIT_TAG "v2.1.7"
   )
+set(MI_BUILD_TESTS OFF)
+set(MI_BUILD_EXAMPLES OFF)
 FetchContent_MakeAvailable(Mimalloc)
 
 
@@ -61,7 +63,7 @@ elseif (MSVC)
             $<$<CONFIG:Release>:
                 /std:c++17;
                 /Oi;
-                /Gy
+                /GL
             >
             /permissive-;
             /sdl;
